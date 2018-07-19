@@ -3,6 +3,7 @@ from math import *
 import operator
 from random import randrange
 from playsound import playsound
+from termcolor import colored
 neighbours = {(0,0):[3,4,5,6],(1,0):[3,8],(1,1):[2,4,9,1],(1,2):[1,3,5,10],(1,3):[1,4,6,11],(1,4):[1,5,7,12],(1,5):[6,13],(2,0):[2,9,14],(2,1):[3,8,10,15],(2,2):[4,9,11,16],(2,3):[5,10,12,17],(2,4):[6,11,13,18],(2,5):[7,12,19],(3,0):[8,15],(3,1):[9,14,16,20],(3,2):[10,15,17,21],(3,3):[11,16,18,22],(3,4):[12,17,19,23],(3,5):[13,18],(4,0):[15,21],(4,1):[16,20,22],(4,2):[17,21,23],(4,3):[18,22]}
 
 tiger_jumps = {(0,0):[9,10,11,12],(1,0):[4,14],(1,1):[5,15],(1,2):[2,6,16],(1,3):[3,17,7],(1,4):[4,18],(1,5):[5,19],(2,0):[10],(2,1):[1,11,20],(2,2):[8,1,12,21],(2,3):[1,9,13,22],(2,4):[1,10,23],(2,5):[11],(3,0):[2,16],(3,1):[3,17],(3,2):[4,14,18],(3,3):[5,15,19],(3,4):[6,16],(3,5):[7,17],(4,0):[9,22],(4,1):[10,23],(4,2):[11,20],(4,3):[12,21]}
@@ -16,7 +17,6 @@ for i in range(1,24):
 
 default = [[1],[2,3,4,5,6,7],[8,9,10,11,12,13],[14,15,16,17,18,19],[20,21,22,23]]
 board_matrix = [['*'],['*','*','*','*','*','*'],['*','*','*','*','*','*'],['*','*','*','*','*','*'],['*','*','*','*']]
-tiger_list = [1,4,5]
 dead_goats = []
 def print_board():
 	print  "              "+(str(board_matrix[0]).strip("[]")).replace(",","")
@@ -37,12 +37,16 @@ def position_placer():
 		choose_goat_position=raw_input()
 		if choose_goat_position.isdigit():
 			choose_goat_position = int(choose_goat_position)
-			int_to_tuples = positions[choose_goat_position]
-			if (board_matrix[int_to_tuples[0]][int_to_tuples[1]] == '*'):
-				board_matrix[int_to_tuples[0]][int_to_tuples[1]] = 'G'+str(goat_counter)
-				goat_counter+=1
+			if choose_goat_position <= 24:
+				int_to_tuples = positions[choose_goat_position]
+				if (board_matrix[int_to_tuples[0]][int_to_tuples[1]] == '*'):
+					board_matrix[int_to_tuples[0]][int_to_tuples[1]] = 'G'+str(goat_counter)
+					goat_counter+=1
+				else:
+					print("the position is occupied!!! Please choose another")
+					position_placer()
 			else:
-				print("the position is occupied!!! Please choose another")
+				print("INVALID ENTRY")
 				position_placer()
 		else:
 			print("INVALID ENTRY")
@@ -287,7 +291,7 @@ def get_random(x,y,increment):
 		if(board_matrix[pos[0]][pos[1]]=='*'):
 			result.append(i)
 	if(len(result)>0):
-		print result
+		#print result
 		random2 = randrange(0,len(result),1)
 		element = result[random2]
 		return (tiger_pos,positions[element])
@@ -495,7 +499,6 @@ board_matrix[0][0]='T1'
 board_matrix[1][2]='T2'
 board_matrix[1][3]='T3'
 print_board()
-empty_list = [i for i in range(1,24) if i not in tiger_list]
 goat_list = []
 
 def one_player():
@@ -573,13 +576,162 @@ def two_player():
 			check_end()
 	else:
 		print "INVALID ENTRY!!!"
+		two_player()
 	
+#beginner function
+def place_dummy_goat():
+	while True:
+		board_index = randrange(0,5,1)
+		if(board_index==0):
+			if(board_matrix[0][0]=='*'):
+				return (0,0)
+		elif(board_index==4):
+			for _ in range(4):
+				index = randrange(0,4,1)
+				if(board_matrix[board_index][index]=='*'):
+					return (board_index,index)
+		else:
+			for _ in range(6):
+				index = randrange(0,6,1)
+				if(board_matrix[board_index][index]=='*'):
+					return (board_index,index)
+
+#beginner function
+def check_goat_in_neighbours_dummy(tiger_pos):
+	goat_list = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12', 'G13', 'G14', 'G15', 'G16']
+	neigh = neighbours[tiger_pos]
+	for i in neigh:
+		neigh_pos = positions[i]
+		if board_matrix[neigh_pos[0]][neigh_pos[1]] in goat_list and neigh_pos!=(0,0):
+			c = list(set(neighbours[neigh_pos]) & set(tiger_jumps[tiger_pos]))
+			if(len(c)>0):
+				common_pos = positions[int(c[0])]
+				if(board_matrix[common_pos[0]][common_pos[1]]=='*'):
+					return c
+	return False
+	
+#beginner function	
+def print_dummy_board(tiger_pos,jump_pos):
+	if(tiger_pos==jump_pos):
+		tiger_pos = (1000,1000)
+	for i in range(len(board_matrix)):
+		output=""
+		if(i==0):
+			output+="              "
+		if(i==1):
+			output+="    "
+		if(i==2):
+			output+="  "
+		if(i==3):
+			output+=" "
+		if(i==4):
+			output+="   "
+		for j in range(len(board_matrix[i])):
+			if((i,j)==tiger_pos):
+				output+="'"+colored(str(board_matrix[i][j]),'white','on_red',attrs=['bold','blink'])+"'"+" "
+			elif((i,j)==jump_pos):
+				output+="'"+colored(str(board_matrix[i][j]),'white','on_green',attrs=['bold','blink'])+"'"+" "
+			else:
+				output+="'"+str(board_matrix[i][j])+"'"+" "
+		print output
+	
+#beginner function	
+def dummy_tiger():
+	tiger_list = ['T1','T2','T3']
+	tiger_nos = []
+	for i in tiger_list:
+		k = get_tiger_position(i)
+		if k != None:
+			tiger_nos.append(k)
+			j = check_goat_in_neighbours_dummy(k)
+			if(j!=False):
+				print_dummy_board(k,positions[int(j[0])])
+				return
+	for _ in range(3):
+		random_tiger = tiger_list[randrange(0,3,1)]
+		tiger_pos = get_tiger_position(random_tiger)
+		neigh = neighbours[tiger_pos]
+		for i in neigh:
+			pos = positions[i]
+			if(board_matrix[pos[0]][pos[1]]=='*'):
+				print_dummy_board(tiger_pos,pos)
+				return
+	playsound("Tiger6.wav")
+	end_tiger_game()
+
+#beginner function
+def move_dummy_goat(goat_list):
+	dead = check_blocked_tigers()
+	if(dead==1):
+		playsound("Tiger6.wav")
+		end_tiger_game()
+	else:
+		for _ in range(16):
+			r = goat_list[randrange(0,16,1)]
+			pos = get_goat_position(r)
+			if(pos!=None):
+				neigh = neighbours[pos]
+				for i in neigh:
+					neigh_pos = positions[i]
+					if(board_matrix[neigh_pos[0]][neigh_pos[1]]=='*'):
+						return (pos,neigh_pos)
+#beginner function	
+def beginner():
+	goat_list = ['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12', 'G13', 'G14', 'G15', 'G16']
+	player = raw_input("choose Goat or Tiger:")
+	if player == 'Goat' or player=='Tiger':
+		if player=="Goat":
+			for i in range(16):
+				k = place_dummy_goat()
+				print_dummy_board(k,k)
+				position_placer()
+				print_board()
+				dead = check_blocked_tigers()
+				if(dead==1):
+					end_tiger_game()
+				intelligent_tiger()
+				print_board()
+				check_end()
+			while(True):
+				k = move_dummy_goat(goat_list)
+				print_dummy_board(k[0],k[1])
+				move_goat()
+				print_board()
+				dead = check_blocked_tigers()
+				if(dead==1):
+					end_tiger_game()
+				intelligent_tiger()
+				print_board()
+				check_end()		
+		else:
+			k = place_dummy_goat()
+			board_matrix[k[0]][k[1]] = goat_list[0]
+			print_board()
+			for i in range(1,16):
+				dead = check_blocked_tigers()
+				if(dead==1):
+					playsound("Tiger6.wav")
+					end_tiger_game()
+				dummy_tiger()
+				move_tiger()
+				print_board()
+				k = place_dummy_goat()
+				board_matrix[k[0]][k[1]] = goat_list[i]
+				print_board()
+				check_end()
+	else:
+		print "INVALID ENTRY!!!"
+		beginner()
+
 def start_game():
-	game = raw_input("enter 1P or 2P:")
+	game = raw_input("enter 1P or 2P or Beginner:")
 	if(game=="1P"):
 		 one_player()
 	elif(game=="2P"):
 		two_player()
+	#beginner function
+	elif(game=="Beginner"):
+		beginner()
 	else:
 		print "INVALID ENTRY!!!"
 		start_game()	
